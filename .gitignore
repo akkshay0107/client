@@ -49,3 +49,6 @@ npm-debug.log
 /teams.pokemonshowdown.com/caches/
 /teams.pokemonshowdown.com/index.html
 /teams.pokemonshowdown.com/ads.txt
+
+# plans to modify showdown client
+ps*.md

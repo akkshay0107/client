@@ -46,6 +46,32 @@ try {
 } catch {}
 
 const routes = JSON.parse(fs.readFileSync('config/routes.json'));
+
+/*********************************************************
+ * Update Research Teams
+ *********************************************************/
+const researchTeams = [];
+const teamDir = 'teams';
+if (fs.existsSync(teamDir)) {
+	const teamFiles = ['hardtr.txt', 'mausape.txt', 'rain.txt', 'sneasler.txt', 'sun.txt', 'tailroom.txt'];
+	const pastesPath = path.join(teamDir, '.pastes');
+	const pastes = fs.existsSync(pastesPath) ? fs.readFileSync(pastesPath, UTF8).split('\n').map(l => l.trim()) : [];
+	const namesPath = path.join(teamDir, '.names');
+	const names = fs.existsSync(namesPath) ? fs.readFileSync(namesPath, UTF8).split('\n').map(l => l.trim()) : [];
+
+	for (let i = 0; i < teamFiles.length; i++) {
+		const file = teamFiles[i];
+		const filePath = path.join(teamDir, file);
+		if (fs.existsSync(filePath)) {
+			researchTeams.push({
+				name: names[i] || file.replace('.txt', ''),
+				teamExport: fs.readFileSync(filePath, UTF8),
+				pokePasteUrl: pastes[i] || '',
+			});
+		}
+	}
+}
+
 const autoconfigRegex = new RegExp(`${escapeRegex(AUTOCONFIG_START)}[^]+${escapeRegex(AUTOCONFIG_END)}`);
 const autoconfig = `${AUTOCONFIG_START}
 Config.version = ${JSON.stringify(version)};
@@ -58,6 +84,9 @@ Config.routes = {
 	users: '${routes.users}',
 	teams: '${routes.teams}',
 };
+
+Config.researchMode = true;
+Config.researchTeams = ${JSON.stringify(researchTeams)};
 ${AUTOCONFIG_END}`;
 
 // remove old automatically generated configuration and add the new one
@@ -226,12 +255,23 @@ try {
 		.replace(/<!-- head custom -->/g, '' + fs.readFileSync('config/head-custom-test.html'));
 } catch {}
 
-fs.writeFileSync('play.pokemonshowdown.com/index.html', indexContents);
+let finalIndexContents = indexContents;
+if (researchTeams.length > 0) {
+	finalIndexContents = preactIndexContents;
+}
+fs.writeFileSync('play.pokemonshowdown.com/index.html', finalIndexContents);
 if (indexContents2) {
 	fs.writeFileSync('play.pokemonshowdown.com/index-test.html', indexContents2);
 }
 fs.writeFileSync('play.pokemonshowdown.com/preactalpha.html', preactIndexContents);
 fs.writeFileSync('play.pokemonshowdown.com/crossprotocol.html', crossprotocolContents);
+
+// Ensure config.js is a hard copy for servers that don't follow symlinks
+try {
+	fs.unlinkSync('play.pokemonshowdown.com/config/config.js');
+} catch {}
+fs.writeFileSync('play.pokemonshowdown.com/config/config.js', fs.readFileSync('config/config.js'));
+
 fs.writeFileSync('play.pokemonshowdown.com/js/replay-embed.js', replayEmbedContents);
 
 let replaysContents = fs.readFileSync('replay.pokemonshowdown.com/index.template.php', UTF8);

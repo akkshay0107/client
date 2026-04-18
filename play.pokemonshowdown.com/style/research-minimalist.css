@@ -1,0 +1,186 @@
+/*********************************************************
+ * RESEARCH MODE: MINIMALIST WHITE & BLACK THEME
+ *********************************************************/
+
+/* Global Reset for Research Mode - Pure White & Black */
+.research-mode, 
+.research-mode body,
+.research-mode #ps-frame {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #000000 !important;
+}
+
+/* Hide navigation, header, and sidebar UI entirely on landing page */
+.research-mode .header,
+.research-mode .ps-room-wrapper.right-panel,
+.research-mode .mainmenufooter,
+.research-mode .mainmenu-mini-windows,
+.research-mode .maintabbarbottom,
+.research-mode .tabbar,
+.research-mode .roomcounters,
+.research-mode .roomlist,
+.research-mode input[name="roomsearch"],
+.research-mode select[name="sections"] {
+    display: none !important;
+}
+
+/* Ensure the main room takes up the full viewport */
+.research-mode .ps-room {
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    border: none !important;
+    background: #ffffff !important;
+}
+
+.research-mode .ps-room-wrapper.left-panel {
+    width: 100% !important;
+    max-width: none !important;
+}
+
+/* Landing Page Layout - Full Focus Centering */
+.research-landing {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important; /* Vertical centering */
+    min-height: 100vh !important;
+    width: 100% !important;
+}
+
+.research-header {
+    text-align: center;
+    margin-bottom: 40px;
+    max-width: 800px;
+}
+
+.research-header h1 {
+    font-size: 32pt;
+    font-weight: 800;
+    margin-bottom: 15px;
+    letter-spacing: -1.5px;
+    color: #000000;
+}
+
+.research-header p {
+    font-size: 14pt;
+    color: #444444;
+    line-height: 1.6;
+}
+
+.research-team-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 600px;
+}
+
+/* Team Card - Modern Minimalist */
+.research-team-card {
+    background: #ffffff !important;
+    border: 1.5px solid #e5e5e5 !important;
+    border-radius: 8px !important;
+    padding: 16px 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.research-team-card:hover {
+    border-color: #000000 !important;
+    background: #f9f9f9 !important;
+}
+
+.research-team-card.selected {
+    border-color: #000000 !important;
+    border-width: 2px !important;
+    background: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+.research-team-card .team-name {
+    font-size: 16pt !important;
+    font-weight: 600 !important;
+    color: #000000 !important;
+    text-transform: capitalize;
+}
+
+.research-team-card .team-icons {
+    display: flex;
+    gap: 8px;
+    opacity: 0.8;
+}
+
+/* PSIcon scaling for minimalist fit */
+.research-team-card .picon {
+    transform: scale(0.9);
+}
+
+.selection-indicator {
+    color: #000000;
+    font-size: 14pt;
+}
+
+/* Footer & Primary Action */
+.research-footer {
+    margin-top: 40px;
+    width: 100%;
+    max-width: 600px;
+}
+
+.research-footer .button.big {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 20px 0 !important;
+    font-size: 15pt !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    width: 100% !important;
+    transition: all 0.2s ease !important;
+    letter-spacing: 0.5px;
+}
+
+.research-footer .button.big:hover:not(.disabled) {
+    background: #333333 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.research-footer .button.big:active:not(.disabled) {
+    transform: translateY(0);
+}
+
+.research-footer .button.big.disabled {
+    background: #f0f0f0 !important;
+    color: #aaaaaa !important;
+    cursor: not-allowed !important;
+}
+
+/* EXEMPT BATTLES: Revert to standard PS styling */
+.ps-room.battle,
+.ps-room.battle * {
+    background: initial !important;
+    color: initial !important;
+    font-family: initial !important;
+}
+
+.research-mode .ps-room.battle {
+    top: 56px !important; /* Restore header space in battles */
+}
+
+/* Ensure the background image is removed from body specifically */
+body.research-mode {
+    background-image: none !important;
+    background-color: #ffffff !important;
+}

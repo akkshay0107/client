@@ -38,6 +38,12 @@ export interface ServerInfo {
 	afd?: boolean;
 	registered?: boolean;
 }
+export interface ResearchTeam {
+	name: string;
+	teamExport: string;
+	packedTeam?: string;
+	pokePasteUrl: string;
+}
 export interface PSConfig {
 	server: ServerInfo;
 	defaultserver: ServerInfo;
@@ -52,6 +58,8 @@ export interface PSConfig {
 	customcolors: Record<string, string>;
 	whitelist?: string[];
 	testclient?: boolean;
+	researchMode?: boolean;
+	researchTeams?: ResearchTeam[];
 }
 export declare const Config: PSConfig;
 
