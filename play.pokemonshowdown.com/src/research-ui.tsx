@@ -8,6 +8,7 @@ export class ResearchLandingPage extends preact.Component {
 	state = {
 		selectedTeamIndex: -1,
 		isWaiting: false,
+		showSettings: false,
 	};
 	psSubscription: any = null;
 	userSubscription: any = null;
@@ -77,7 +78,7 @@ export class ResearchLandingPage extends preact.Component {
 	};
 
 	openSettings = () => {
-		PS.join('research-settings' as RoomID);
+		this.setState({ showSettings: true });
 	};
 
 	override render() {
@@ -97,6 +98,9 @@ export class ResearchLandingPage extends preact.Component {
 				>
 					<i class="fa fa-cog"></i>
 				</button>
+				{this.state.showSettings && (
+					<ResearchSettingsModal onClose={() => this.setState({ showSettings: false })} />
+				)}
 				{isWaiting ? (
 					<div class="research-waiting">
 						<div class="spinner"></div>
@@ -137,13 +141,11 @@ export class ResearchLandingPage extends preact.Component {
 	}
 }
 
-export class ResearchSettingsPanel extends PSRoomPanel {
-	static readonly id = 'research-settings';
-	static readonly routes = ['research-settings'];
-
+export class ResearchSettingsModal extends preact.Component<{ onClose: () => void }> {
 	state = {
 		newUsername: PS.user.name || '',
-		currentPassword: '',
+		currentPasswordForUsername: '',
+		currentPasswordForPassword: '',
 		newPassword: '',
 		confirmPassword: '',
 		loading: false,
@@ -153,20 +155,21 @@ export class ResearchSettingsPanel extends PSRoomPanel {
 
 	handleChangeUsername = (e: Event) => {
 		e.preventDefault();
-		const { newUsername, currentPassword } = this.state;
-		if (!newUsername || !currentPassword) return;
+		const { newUsername, currentPasswordForUsername } = this.state;
+		if (!newUsername || !currentPasswordForUsername) return;
 
 		this.setState({ loading: true, error: '', success: '' });
 
 		PSLoginServer.query('changeusername', {
 			name: PS.user.name,
-			pass: currentPassword,
+			pass: currentPasswordForUsername,
 			newname: newUsername
 		}).then(res => {
 			this.setState({ loading: false });
 			if (res?.actionsuccess) {
-				this.setState({ success: 'Username updated successfully!', currentPassword: '' });
-				PS.user.updateLogin({ name: res.newusername });
+				PS.alert("Username updated successfully! You will be logged out to complete the change.");
+				PS.user.logOut();
+				window.location.reload();
 			} else {
 				this.setState({ error: res?.actionerror || 'Failed to update username' });
 			}
@@ -175,8 +178,8 @@ export class ResearchSettingsPanel extends PSRoomPanel {
 
 	handleChangePassword = (e: Event) => {
 		e.preventDefault();
-		const { currentPassword, newPassword, confirmPassword } = this.state;
-		if (!currentPassword || !newPassword || !confirmPassword) return;
+		const { currentPasswordForPassword, newPassword, confirmPassword } = this.state;
+		if (!currentPasswordForPassword || !newPassword || !confirmPassword) return;
 
 		if (newPassword !== confirmPassword) {
 			this.setState({ error: 'New passwords do not match' });
@@ -187,14 +190,14 @@ export class ResearchSettingsPanel extends PSRoomPanel {
 
 		PSLoginServer.query('changepassword', {
 			name: PS.user.name,
-			pass: currentPassword,
+			pass: currentPasswordForPassword,
 			newpass: newPassword
 		}).then(res => {
 			this.setState({ loading: false });
 			if (res?.actionsuccess) {
 				this.setState({ 
 					success: 'Password updated successfully!', 
-					currentPassword: '', 
+					currentPasswordForPassword: '', 
 					newPassword: '', 
 					confirmPassword: '' 
 				});
@@ -205,103 +208,106 @@ export class ResearchSettingsPanel extends PSRoomPanel {
 	};
 
 	override render() {
-		const { newUsername, currentPassword, newPassword, confirmPassword, loading, error, success } = this.state;
+		const { newUsername, newPassword, confirmPassword, loading, error, success } = this.state;
 
 		return (
-			<PSPanelWrapper room={this.props.room} width={400} scrollable={true}>
-				<div class="research-settings-panel" style="padding: 20px">
-					<div class="research-header" style="margin-bottom: 20px">
-						<h2 style="margin: 0">Account Settings</h2>
-						<p style="font-size: 11pt">Modify your participant profile</p>
+			<div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 10000;" onClick={(e) => e.target === e.currentTarget && this.props.onClose()}>
+				<div class="research-settings-panel" style="padding: 30px; background: #fff; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); width: 100%; max-width: 450px; max-height: 90vh; overflow-y: auto;" onClick={e => e.stopPropagation()}>
+					<div class="research-header" style="margin-bottom: 25px; text-align: left; display: flex; justify-content: space-between; align-items: flex-start;">
+						<div>
+							<h2 style="margin: 0; font-size: 20pt; font-weight: 800; color: #000;">Account Settings</h2>
+							<p style="margin: 5px 0 0; color: #666; font-size: 11pt;">Manage your participant profile</p>
+						</div>
+						<button onClick={this.props.onClose} style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
 					</div>
 
-					{error && <div class="login-error" style="margin-bottom: 15px">{error}</div>}
-					{success && <div class="login-success" style="margin-bottom: 15px; color: green; text-align: center; background: #e6ffed; padding: 10px; border-radius: 8px; border: 1px solid #b7eb8f;">{success}</div>}
+					{error && <div class="login-error" style="margin-bottom: 20px; background: #fff0f0; color: #c00; padding: 12px; border-radius: 8px; border: 1px solid #ffc1c1; text-align: center;">{error}</div>}
+					{success && <div style="background: #e6ffed; color: #22863a; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; border: 1px solid #9be9a8;">{success}</div>}
 
-					<div class="settings-section">
-						<h3>Change Username</h3>
-						<form class="research-login-form" onSubmit={this.handleChangeUsername}>
-							<div class="input-group">
-								<label>New Username</label>
+					<div class="settings-section" style="margin-bottom: 30px">
+						<h3 style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 8px; font-size: 14pt; color: #333;">Change Username</h3>
+						<form onSubmit={this.handleChangeUsername} class="research-login-form">
+							<div class="input-group" style="margin-bottom: 15px">
+								<label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 10pt; color: #666; text-transform: uppercase;">New Username</label>
 								<input 
 									type="text" 
-									value={newUsername}
+									value={newUsername} 
 									onInput={e => this.setState({ newUsername: (e.target as HTMLInputElement).value })}
 									disabled={loading}
+									style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 12pt;"
 								/>
 							</div>
-							<div class="input-group">
-								<label>Current Password</label>
+							<div class="input-group" style="margin-bottom: 15px">
+								<label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 10pt; color: #666; text-transform: uppercase;">Current Password</label>
 								<input 
 									type="password" 
-									value={currentPassword}
-									onInput={e => this.setState({ currentPassword: (e.target as HTMLInputElement).value })}
+									value={this.state.currentPasswordForUsername}
+									onInput={e => this.setState({ currentPasswordForUsername: (e.target as HTMLInputElement).value })}
 									disabled={loading}
+									style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 12pt;"
 								/>
 							</div>
 							<div class="research-footer" style="margin-top: 10px">
 								<button 
 									type="submit" 
-									class={`button ${loading ? 'disabled' : ''}`}
-									style="width: 100%; padding: 10px; background: #000; color: #fff; border-radius: 5px;"
-									disabled={loading || !newUsername || !currentPassword}
+									class={`button ${loading || !newUsername || !this.state.currentPasswordForUsername ? 'disabled' : ''}`}
+									style="width: 100%; padding: 12px; background: #000; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;"
+									disabled={loading || !newUsername || !this.state.currentPasswordForUsername}
 								>
-									Update Username
+									{loading ? 'Updating...' : 'Update Username'}
 								</button>
+								<p style="font-size: 9pt; color: #888; margin-top: 8px; text-align: center;">Note: This will log you out and require re-login.</p>
 							</div>
 						</form>
 					</div>
-
-					<hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee" />
 
 					<div class="settings-section">
-						<h3>Change Password</h3>
-						<form class="research-login-form" onSubmit={this.handleChangePassword}>
-							<div class="input-group">
-								<label>Current Password</label>
+						<h3 style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 8px; font-size: 14pt; color: #333;">Change Password</h3>
+						<form onSubmit={this.handleChangePassword} class="research-login-form">
+							<div class="input-group" style="margin-bottom: 15px">
+								<label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 10pt; color: #666; text-transform: uppercase;">Current Password</label>
 								<input 
 									type="password" 
-									value={currentPassword}
-									onInput={e => this.setState({ currentPassword: (e.target as HTMLInputElement).value })}
+									value={this.state.currentPasswordForPassword}
+									onInput={e => this.setState({ currentPasswordForPassword: (e.target as HTMLInputElement).value })}
 									disabled={loading}
+									style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 12pt;"
 								/>
 							</div>
-							<div class="input-group">
-								<label>New Password</label>
+							<div class="input-group" style="margin-bottom: 15px">
+								<label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 10pt; color: #666; text-transform: uppercase;">New Password</label>
 								<input 
 									type="password" 
-									value={newPassword}
+									value={newPassword} 
 									onInput={e => this.setState({ newPassword: (e.target as HTMLInputElement).value })}
 									disabled={loading}
+									style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 12pt;"
 								/>
 							</div>
-							<div class="input-group">
-								<label>Confirm New Password</label>
+							<div class="input-group" style="margin-bottom: 15px">
+								<label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 10pt; color: #666; text-transform: uppercase;">Confirm New Password</label>
 								<input 
 									type="password" 
-									value={confirmPassword}
+									value={confirmPassword} 
 									onInput={e => this.setState({ confirmPassword: (e.target as HTMLInputElement).value })}
 									disabled={loading}
+									style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 12pt;"
 								/>
 							</div>
 							<div class="research-footer" style="margin-top: 10px">
 								<button 
 									type="submit" 
-									class={`button ${loading ? 'disabled' : ''}`}
-									style="width: 100%; padding: 10px; background: #000; color: #fff; border-radius: 5px;"
-									disabled={loading || !currentPassword || !newPassword || !confirmPassword}
+									class={`button ${loading || !this.state.currentPasswordForPassword || !newPassword || !confirmPassword ? 'disabled' : ''}`}
+									style="width: 100%; padding: 12px; background: #000; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;"
+									disabled={loading || !this.state.currentPasswordForPassword || !newPassword || !confirmPassword}
 								>
-									Update Password
+									{loading ? 'Updating...' : 'Update Password'}
 								</button>
 							</div>
 						</form>
 					</div>
-
-					<div style="margin-top: 30px; text-align: center">
-						<button class="button" style="padding: 10px 20px" onClick={() => this.close()}>Close</button>
-					</div>
 				</div>
-			</PSPanelWrapper>
+			</div>
 		);
 	}
 }
@@ -411,4 +417,4 @@ class ResearchTeamCard extends preact.Component<{
 	}
 }
 
-PS.addRoomType(ResearchSettingsPanel);
+PS.addRoomType(ResearchLandingPage);
